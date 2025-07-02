@@ -8,6 +8,23 @@ Renaming classes that we migrate with prefix `Re` (old prefix is `RB`).
 This way we can track what have been migrated.
 But please note, not all `Re` classes are fully migrated, usually this means we did a first pass and initial cleanings.
 
+On refactoring menu items we have a practice to put:
+- (R) for refactorings so users know this will preserve behavior
+- (T) for transformations, similarly so they know this will not necessarily preserve behavior
+
+## Refactorings
+
+Generally, we first need to migrate refactorings to new architecture in order to start working on drivers. This is because drivers rely on the new API of refactorings and fine-grained access to refactorings.
+
+Migrating refactorings includes:
+
+- creating and extracting `prepareForExecution` step. This step is almost always present and is implicit and scattered among preconditions and execution. This steph should prepare everything for precondition checking and transformation. This includes: retrieveing objects from the model (refactoring namespace), parsing methods, doing some initial transformations, etc.
+- identifying preconditions that are performed during transformation step. This usually boils down to some checks that raise refactoring warning or error. These should be moved to precondition step.
+- reifying preconditions. For each precondition that is not a standalone object we should create one. These objects are really useful for driver and having good error messages.
+- enforcing reuse of existing refactorings. Next step is to inspect the transformation steps and investigate if some of them could be replaced with existing refactorings OR if some of them can be encapsulated to create new refactorings. If we identify some steps that can be refactored to use existing transformation/refactoring, it is good practice to search for similar method usage in other refactorings and further increase code reuse and safety.
+- try to make transformation step declarative. To do this we leverage ReCompositeRefactoring or ReCompositeTransformation classes and their approach to compose refactoring steps into new refactorings.
+- make refactorings decorators of transformations. For refactorings that have several behavior preserving preconditions and/or additional steps they perform to ensure behavior will be preserved, we make them decorators of transformation. This is very useful for UX since then we will be able to offer to user to use either refactoring or transformation depending on the usecase. 
+
 ## UI/UX
 
 Improving experience: 
